@@ -1,0 +1,272 @@
+{
+    "description": "A New Flow",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "event": "incomingMessage"
+          },
+          {
+            "next": "varMain",
+            "event": "incomingCall"
+          },
+          {
+            "event": "incomingConversationMessage"
+          },
+          {
+            "event": "incomingRequest"
+          },
+          {
+            "event": "incomingParent"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -10,
+            "y": -140
+          }
+        }
+      },
+      {
+        "name": "varMain",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "welcome",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "12345",
+              "key": "sfdcContactObjectId"
+            },
+            {
+              "value": "23456",
+              "key": "sfdcCaseObjectId"
+            },
+            {
+              "value": "company name",
+              "key": "companyName"
+            }
+          ],
+          "offset": {
+            "x": 130,
+            "y": 40
+          }
+        }
+      },
+      {
+        "name": "mainMenu",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "mainMenuGather",
+            "event": "keypress"
+          },
+          {
+            "event": "speech"
+          },
+          {
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "speech_timeout": "auto",
+          "offset": {
+            "x": 180,
+            "y": 510
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "Press one to demonstrate a simple Salesforce contact screen pop.\n\nPress two to demonstrate a screen pop of an existing case.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "profanity_filter": "true",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "mainMenuGather",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "retry_1",
+            "event": "noMatch"
+          },
+          {
+            "next": "pleaseAgent_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "1 (Agent)",
+                "arguments": [
+                  "{{widgets.mainMenu.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "next": "pleaseAgent_2",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "2 (Case)",
+                "arguments": [
+                  "{{widgets.mainMenu.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "2"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.mainMenu.Digits}}",
+          "offset": {
+            "x": 220,
+            "y": 780
+          }
+        }
+      },
+      {
+        "name": "retry_1",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "mainMenu",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": -400,
+            "y": 620
+          },
+          "loop": 1,
+          "say": "I did not get your input. Please try again.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "welcome",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "mainMenu",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 140,
+            "y": 270
+          },
+          "loop": 1,
+          "say": "Welcome to {{flow.variables.companyName}}, the following menu options are available.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "pleaseAgent_1",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "sendFlex-ContactPop",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 40,
+            "y": 1110
+          },
+          "loop": 1,
+          "say": "Please wait while I connect you to an available agent.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "sendFlex-ContactPop",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 60,
+            "y": 1430
+          },
+          "workflow": "WW7c700c017fbc70033b60391cd56c301f",
+          "channel": "TC03e5f8a07ab0ff2499519ca568421357",
+          "attributes": "{ \n\"type\": \"inbound\", \"name\": \"{{trigger.call.From}}\",\n\"sfdcObjectId\" : \"{{flow.variables.sfdcContactObjectId}}\"\n}"
+        }
+      },
+      {
+        "name": "pleaseAgent_2",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "sendFlex-CasePop",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 390,
+            "y": 1110
+          },
+          "loop": 1,
+          "say": "Please wait while I connect you to an available agent.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "sendFlex-CasePop",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 410,
+            "y": 1430
+          },
+          "workflow": "WW7c700c017fbc70033b60391cd56c301f",
+          "channel": "TC03e5f8a07ab0ff2499519ca568421357",
+          "attributes": "{ \n\"type\": \"inbound\", \"name\": \"{{trigger.call.From}}\",\n\"sfdcObjectId\" : \"{{flow.variables.sfdcCaseObjectId}}\"\n}"
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }

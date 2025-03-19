@@ -1,0 +1,1263 @@
+{
+    "description": "SFDC_MessagingFlow",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "event": "incomingMessage"
+          },
+          {
+            "event": "incomingCall"
+          },
+          {
+            "next": "setVarsMain",
+            "event": "incomingConversationMessage"
+          },
+          {
+            "event": "incomingRequest"
+          },
+          {
+            "event": "incomingParent"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -500,
+            "y": -1090
+          }
+        }
+      },
+      {
+        "name": "SendMessageToAgent",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -530,
+            "y": 1620
+          },
+          "workflow": "WW05be60cc716f5189a5d0510322a07cdb",
+          "channel": "TC51bd2f611b72e62a90f8f811699ec368",
+          "attributes": "{\n\"name\": \"{{trigger.conversations.From}}\", \n\"channelType\": \"{{trigger.message.ChannelAttributes.channel_type}}\", \n\"channelSid\": \"{{flow.channel.address}}\",\n\"sfdcObjectId\" : \"{{flow.variables.contactId}}\"\n}"
+        }
+      },
+      {
+        "name": "varContactInfo_1",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "txtMainMenuFound",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{widgets.SFDC_Contact_Lookup.parsed.data.records[0].Name}}",
+              "key": "contactName"
+            },
+            {
+              "value": "{{widgets.SFDC_Contact_Lookup.parsed.data.records[0].Id}}",
+              "key": "contactId"
+            },
+            {
+              "value": "{{widgets.SFDC_Contact_Lookup.parsed.data.records[0].Phone}}",
+              "key": "contactPhone"
+            },
+            {
+              "value": "{{widgets.SFDC_Contact_Lookup.parsed.data.records[0].Email}}",
+              "key": "contactEmail"
+            },
+            {
+              "value": "{{widgets.SFDC_Contact_Lookup.parsed.data.totalSize}}",
+              "key": "contactCount"
+            }
+          ],
+          "offset": {
+            "x": -170,
+            "y": 0
+          }
+        }
+      },
+      {
+        "name": "txtMainMenuFound",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "splitMainMenuReponse",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -160,
+            "y": 240
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "body": "Hello {{flow.variables.contactName}},  welcome to {{widgets.setVarsMain.companyName}}   customer  services.\n\nText \"agent\" to immediately speak with a sales advisor.\n\nText \"support\" to  submit a new or work on an existing client request.",
+          "timeout": "3600"
+        }
+      },
+      {
+        "name": "splitMainMenuReponse",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "txtWait_1",
+            "event": "noMatch"
+          },
+          {
+            "next": "txtWait_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "agent",
+                "arguments": [
+                  "{{widgets.txtMainMenuFound.inbound.Body}}"
+                ],
+                "type": "contains",
+                "value": "agent"
+              }
+            ]
+          },
+          {
+            "next": "txtSupportCaseMenu",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "support",
+                "arguments": [
+                  "{{widgets.txtMainMenuFound.inbound.Body}}"
+                ],
+                "type": "contains",
+                "value": "support"
+              }
+            ]
+          },
+          {
+            "next": "send_message_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "If value equal_to goodbye",
+                "arguments": [
+                  "{{widgets.txtMainMenuFound.inbound.Body}}"
+                ],
+                "type": "contains",
+                "value": "goodbye"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.txtMainMenuFound.inbound.Body}}",
+          "offset": {
+            "x": 20,
+            "y": 610
+          }
+        }
+      },
+      {
+        "name": "txtWait_1",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "SendMessageToAgent",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -530,
+            "y": 1320
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "Please wait for the next care specialist."
+        }
+      },
+      {
+        "name": "txtSupportCaseMenu",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "splitSupportCaseResponse",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 350,
+            "y": 880
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "body": "The following options are available:\n\nText \"new\" to create a new request;\n\nText \"existing\" to work with an existing request.",
+          "timeout": "3600"
+        }
+      },
+      {
+        "name": "splitSupportCaseResponse",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "txtCaseNewDescription",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "new",
+                "arguments": [
+                  "{{widgets.txtSupportCaseMenu.inbound.Body}}"
+                ],
+                "type": "contains",
+                "value": "new"
+              }
+            ]
+          },
+          {
+            "next": "txtGetExistingCase",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "existing",
+                "arguments": [
+                  "{{widgets.txtSupportCaseMenu.inbound.Body}}"
+                ],
+                "type": "contains",
+                "value": "existing"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.txtSupportCaseMenu.inbound.Body}}",
+          "offset": {
+            "x": 350,
+            "y": 1140
+          }
+        }
+      },
+      {
+        "name": "txtWait_2",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "flexNewCase",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 210,
+            "y": 3020
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "Please wait for the next care specialist."
+        }
+      },
+      {
+        "name": "flexNewCase",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 210,
+            "y": 3320
+          },
+          "workflow": "WW05be60cc716f5189a5d0510322a07cdb",
+          "channel": "TC51bd2f611b72e62a90f8f811699ec368",
+          "attributes": "{\"name\": \"{{trigger.message.ChannelAttributes.from}}\", \"channelType\": \"{{trigger.message.ChannelAttributes.channel_type}}\", \"channelSid\": \"{{trigger.message.ChannelSid}}\",\n\"sfdcObjectId\":\"{{widgets.createCaseNew.parsed.data.id}}\"\n}"
+        }
+      },
+      {
+        "name": "send_to_flex_2",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1140,
+            "y": 3340
+          },
+          "workflow": "WW05be60cc716f5189a5d0510322a07cdb",
+          "channel": "TC51bd2f611b72e62a90f8f811699ec368",
+          "attributes": "{\"name\": \"{{trigger.message.ChannelAttributes.from}}\", \"channelType\": \"{{trigger.message.ChannelAttributes.channel_type}}\", \"channelSid\": \"{{trigger.message.ChannelSid}}\",\n\"sfdcSearchString\":\"{{widgets.txtGetExistingCase.inbound.Body}}\"\n}"
+        }
+      },
+      {
+        "name": "txtGetExistingCase",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "getCasebyNumber",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 770,
+            "y": 1360
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "body": "Please text your existing request number.",
+          "timeout": "3600"
+        }
+      },
+      {
+        "name": "txtWait_3",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "send_to_flex_2",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1140,
+            "y": 3110
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "Please wait for the next care specialist."
+        }
+      },
+      {
+        "name": "SFDC_Contact_Lookup",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "contactCount",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "service_sid": "ZS19ff441ce42e5ca414c3273f3db01910",
+          "environment_sid": "ZEbbf287a015ff1270efc2ebbc47e9c670",
+          "offset": {
+            "x": -480,
+            "y": -569
+          },
+          "function_sid": "ZH05830bb0b262dc7092110b32c8e88fb5",
+          "parameters": [
+            {
+              "value": "{{trigger.conversation.From}}",
+              "key": "number"
+            }
+          ],
+          "url": "https://sfdcserverless-9374-dev.twil.io/sfdc-contactLookup"
+        }
+      },
+      {
+        "name": "contactCount",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "varContactInfo_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "found (1)",
+                "arguments": [
+                  "{{widgets.SFDC_Contact_Lookup.parsed.data.totalSize}}"
+                ],
+                "type": "equal_to",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "next": "varContactInfo_2",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "not found ( 0 )",
+                "arguments": [
+                  "{{widgets.SFDC_Contact_Lookup.parsed.data.totalSize}}"
+                ],
+                "type": "equal_to",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "next": "varContactInfo_3",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "multiple (>1)",
+                "arguments": [
+                  "{{widgets.SFDC_Contact_Lookup.parsed.data.totalSize}}"
+                ],
+                "type": "greater_than",
+                "value": "1"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.SFDC_Contact_Lookup.parsed.data.totalSize}}",
+          "offset": {
+            "x": -150,
+            "y": -330
+          }
+        }
+      },
+      {
+        "name": "setVarsMain",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "SFDC_Contact_Lookup",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "Company name",
+              "key": "companyName"
+            }
+          ],
+          "offset": {
+            "x": -490,
+            "y": -790
+          }
+        }
+      },
+      {
+        "name": "getCasebyNumber",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "splitGetCaseByNumberFound",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "service_sid": "ZS19ff441ce42e5ca414c3273f3db01910",
+          "environment_sid": "ZEbbf287a015ff1270efc2ebbc47e9c670",
+          "offset": {
+            "x": 780,
+            "y": 1620
+          },
+          "function_sid": "ZH13078342f3288347c2afaac1c53251ac",
+          "parameters": [
+            {
+              "value": "{{widgets.txtGetExistingCase.inbound.Body}}",
+              "key": "caseNumber"
+            }
+          ],
+          "url": "https://sfdcserverless-9374-dev.twil.io/sfdc-getCaseByNumber"
+        }
+      },
+      {
+        "name": "splitGetCaseByNumberFound",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "setVarsCase",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "true",
+                "arguments": [
+                  "{{widgets.getCasebyNumber.parsed.status}}"
+                ],
+                "type": "equal_to",
+                "value": "found"
+              }
+            ]
+          },
+          {
+            "next": "retryCaseNumber",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "false",
+                "arguments": [
+                  "{{widgets.getCasebyNumber.parsed.status}}"
+                ],
+                "type": "equal_to",
+                "value": "not-found"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.getCasebyNumber.parsed.status}}",
+          "offset": {
+            "x": 1128,
+            "y": 1829
+          }
+        }
+      },
+      {
+        "name": "retryCaseNumber",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "txtGetExistingCase",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1390,
+            "y": 1560
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "A request with number {{widgets.txtGetExistingCase.inbound.Body}}  was not found.\n\nLet's try again."
+        }
+      },
+      {
+        "name": "txtCaseStatus",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "txtExistCaseMenu",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1250,
+            "y": 2290
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "Your request ( \n{{widgets.setVarsCase.caseNumber}}  ) with title \"{{widgets.setVarsCase.caseSubject}}\" currently has the status \"{{widgets.setVarsCase.caseStatus}} \""
+        }
+      },
+      {
+        "name": "txtExistCaseMenu",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "splittextExistCaseMenu",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1260,
+            "y": 2520
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "body": "Text \"agent\" to work with an care specialist.\n\nText \"update\" to provide an update on this request;\n\nText \"bye\" if you request is compete.",
+          "timeout": "3600"
+        }
+      },
+      {
+        "name": "splittextExistCaseMenu",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "txtExistGoodbye",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "bye",
+                "arguments": [
+                  "{{widgets.txtExistCaseMenu.inbound.Body}}"
+                ],
+                "type": "equal_to",
+                "value": "bye"
+              }
+            ]
+          },
+          {
+            "next": "txtWait_3",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "agent",
+                "arguments": [
+                  "{{widgets.txtExistCaseMenu.inbound.Body}}"
+                ],
+                "type": "equal_to",
+                "value": "agent"
+              }
+            ]
+          },
+          {
+            "next": "txtExistCaseUpdate",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "update",
+                "arguments": [
+                  "{{widgets.txtExistCaseMenu.inbound.Body}}"
+                ],
+                "type": "equal_to",
+                "value": "update"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.txtExistCaseMenu.inbound.Body}}",
+          "offset": {
+            "x": 1260,
+            "y": 2780
+          }
+        }
+      },
+      {
+        "name": "txtExistGoodbye",
+        "type": "send-message",
+        "transitions": [
+          {
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 710,
+            "y": 3070
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "Thank you for your inquiry."
+        }
+      },
+      {
+        "name": "setVarsCase",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "txtCaseStatus",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{widgets.getCasebyNumber.parsed.data.Id}}",
+              "key": "caseId"
+            },
+            {
+              "value": "{{widgets.getCasebyNumber.parsed.data.ContactId}}",
+              "key": "caseContactId"
+            },
+            {
+              "value": "{{widgets.getCasebyNumber.parsed.data.CaseNumber}}",
+              "key": "caseNumber"
+            },
+            {
+              "value": "{{widgets.getCasebyNumber.parsed.data.Subject}}",
+              "key": "caseSubject"
+            },
+            {
+              "value": "{{widgets.getCasebyNumber.parsed.data.Description}}",
+              "key": "caseDescription"
+            },
+            {
+              "value": "{{widgets.getCasebyNumber.parsed.data.Status}}",
+              "key": "caseStatus"
+            }
+          ],
+          "offset": {
+            "x": 1250,
+            "y": 2070
+          }
+        }
+      },
+      {
+        "name": "txtExistCaseUpdate",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "setVarsCaseUpdateTemplate",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1510,
+            "y": 3110
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "body": "In a few word, please provide your update to this request.",
+          "timeout": "3600"
+        }
+      },
+      {
+        "name": "createCaseComment",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "txtExistCaseGoodbye",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "service_sid": "ZS19ff441ce42e5ca414c3273f3db01910",
+          "environment_sid": "ZEbbf287a015ff1270efc2ebbc47e9c670",
+          "offset": {
+            "x": 1530,
+            "y": 3570
+          },
+          "function_sid": "ZH7cb40108947cbff37828888f79504712",
+          "parameters": [
+            {
+              "value": "{{flow.variables.caseId}}",
+              "key": "caseId"
+            },
+            {
+              "value": "{{widgets.txtExistCaseUpdate.inbound.Body}}",
+              "key": "comment"
+            },
+            {
+              "value": "{{flows.variables.caseUpdateTemplate}}",
+              "key": "caseTemplate"
+            }
+          ],
+          "url": "https://sfdcserverless-9374-dev.twil.io/sfdc-createCaseComment"
+        }
+      },
+      {
+        "name": "setVarsCaseUpdateTemplate",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "createCaseComment",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "CaseUpdate from channel: SMS\nChannelContact: {{trigger.message.ChannelAttributes.from}} \nCaseNumber:  {{widgets.setVarsCase.caseNumber}}\nCase Update Details:",
+              "key": "caseUpdateTemplate"
+            }
+          ],
+          "offset": {
+            "x": 1520,
+            "y": 3340
+          }
+        }
+      },
+      {
+        "name": "txtExistCaseGoodbye",
+        "type": "send-message",
+        "transitions": [
+          {
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1540,
+            "y": 3820
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "You update has been successfully captured and the care specialist  notified.\n\nThank you for your inquiry."
+        }
+      },
+      {
+        "name": "txtCaseNewDescription",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "txtCaseNewPriority",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 320,
+            "y": 1440
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "body": "In a few words, provide a description of your immediate problem or needs.",
+          "timeout": "3600"
+        }
+      },
+      {
+        "name": "txtCaseNewPriority",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "splitCaseNewPriority",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 320,
+            "y": 1750
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "body": "Specify the urgency (priority) of your request.\n\nText \"low\", \"medium\" or \"high\"  .",
+          "timeout": "3600"
+        }
+      },
+      {
+        "name": "splitCaseNewPriority",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "txtRetryCasePriority",
+            "event": "noMatch"
+          },
+          {
+            "next": "setVarsNewCase",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "low, medium, high",
+                "arguments": [
+                  "{{widgets.txtCaseNewPriority.inbound.Body}}"
+                ],
+                "type": "matches_any_of",
+                "value": "low, medium, high"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.txtCaseNewPriority.inbound.Body}}",
+          "offset": {
+            "x": 320,
+            "y": 2010
+          }
+        }
+      },
+      {
+        "name": "txtRetryCasePriority",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "txtCaseNewPriority",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -220,
+            "y": 1870
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "I did not receive your response. Please try again."
+        }
+      },
+      {
+        "name": "setVarsNewCase",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "createCaseNew",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{widgets.txtCaseNewDescription.inbound.Body}}",
+              "key": "description"
+            },
+            {
+              "value": "{{widgets.txtCaseNewPriority.inbound.Body}}",
+              "key": "priority"
+            },
+            {
+              "value": "{{widgets.txtCaseNewDescription.inbound.Body}}",
+              "key": "subject"
+            }
+          ],
+          "offset": {
+            "x": 460,
+            "y": 2330
+          }
+        }
+      },
+      {
+        "name": "createCaseNew",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "txtWait_2",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "service_sid": "ZS19ff441ce42e5ca414c3273f3db01910",
+          "environment_sid": "ZEbbf287a015ff1270efc2ebbc47e9c670",
+          "offset": {
+            "x": 450,
+            "y": 2590
+          },
+          "function_sid": "ZH8398e1857abf5a40aa6809cc54e43459",
+          "parameters": [
+            {
+              "value": "{{flow.variables.contactId}}",
+              "key": "contactId"
+            },
+            {
+              "value": "{{flow.variables.priority}}",
+              "key": "priority"
+            },
+            {
+              "value": "{{flow.variables.subject}}",
+              "key": "subject"
+            }
+          ],
+          "url": "https://sfdcserverless-9374-dev.twil.io/sfdc-createCase"
+        }
+      },
+      {
+        "name": "send_message_1",
+        "type": "send-message",
+        "transitions": [
+          {
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 857,
+            "y": 754
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "Thank you for your inquiry"
+        }
+      },
+      {
+        "name": "varContactInfo_2",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "pleaseWait_1a",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "\"\"",
+              "key": "contactName"
+            },
+            {
+              "value": "\"\"",
+              "key": "contactId"
+            },
+            {
+              "value": "{{trigger.call.From | remove_first:'+'}}",
+              "key": "contactPhone"
+            },
+            {
+              "value": "\"\"",
+              "key": "contactEmail"
+            },
+            {
+              "value": "{{widgets.SFDC_Contact_Lookup.parsed.data.totalSize}}",
+              "key": "contactCount"
+            }
+          ],
+          "offset": {
+            "x": 180,
+            "y": 0
+          }
+        }
+      },
+      {
+        "name": "varContactInfo_3",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "pleaseWait_1b",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "\"\"",
+              "key": "contactName"
+            },
+            {
+              "value": "\"\"",
+              "key": "contactId"
+            },
+            {
+              "value": "{{trigger.call.From | remove_first:'+'}}",
+              "key": "contactPhone"
+            },
+            {
+              "value": "\"\"",
+              "key": "contactEmail"
+            },
+            {
+              "value": "{{widgets.SFDC_Contact_Lookup.parsed.data.totalSize}}",
+              "key": "contactCount"
+            }
+          ],
+          "offset": {
+            "x": 530,
+            "y": 0
+          }
+        }
+      },
+      {
+        "name": "pleaseWait_1a",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "RouteToAgent-ContactNotFound",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 770,
+            "y": 280
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "Please wait while I connect your message to an available agent."
+        }
+      },
+      {
+        "name": "pleaseWait_1b",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "RouteToAgent-ContactMultiple",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1140,
+            "y": 250
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "zScalarConcerige",
+          "to": "{{contact.channel.address}}",
+          "body": "Please wait while I connect your message to an available agent."
+        }
+      },
+      {
+        "name": "RouteToAgent-ContactNotFound",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 780,
+            "y": 500
+          },
+          "workflow": "WW05be60cc716f5189a5d0510322a07cdb",
+          "channel": "TC51bd2f611b72e62a90f8f811699ec368",
+          "attributes": "{ \n\"type\": \"inbound\", \"name\": \"\",\n\"sfdcContactFound\" : \"false\",\n\"sfdcSearchString\" : \"{{flow.variables.contactPhone}}\",\n\"contactData\" : {{ widgets.SFDC_Contact_Lookup.parsed | to_json }} \n}"
+        }
+      },
+      {
+        "name": "RouteToAgent-ContactMultiple",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1160,
+            "y": 500
+          },
+          "workflow": "WW05be60cc716f5189a5d0510322a07cdb",
+          "channel": "TC51bd2f611b72e62a90f8f811699ec368",
+          "attributes": "{ \n\"type\": \"inbound\", \"name\": \"\",\n\"sfdcContactFound\" : \"false\",\n\"sfdcSearchString\" : \"{{flow.variables.contactPhone}}\",\n\"contactData\" : {{ widgets.SFDC_Contact_Lookup.parsed | to_json }} \n}"
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }

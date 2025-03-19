@@ -1,0 +1,1755 @@
+{
+    "description": "A New Flow",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "event": "incomingMessage"
+          },
+          {
+            "next": "setVarsMain",
+            "event": "incomingCall"
+          },
+          {
+            "event": "incomingConversationMessage"
+          },
+          {
+            "event": "incomingRequest"
+          },
+          {
+            "event": "incomingParent"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 0,
+            "y": -930
+          }
+        }
+      },
+      {
+        "name": "welcomeContactFound",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherMainMenuOptions",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 30,
+            "y": 210
+          },
+          "loop": 1,
+          "say": "Hello {{widgets.setVarsContact.customerName}} , welcome to {{widgets.setVarsMain.companyName}} .",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "flexToAgent",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "waitUrl": "",
+          "offset": {
+            "x": -270,
+            "y": 1160
+          },
+          "workflow": "WW1fc73fb0c733ad6307f3e3f87dfa2003",
+          "channel": "TCc547531085fc8aeef73476f32eedf1de",
+          "attributes": "{ \"type\": \"inbound\", \"name\": \"{{trigger.call.From}}\" }",
+          "waitUrlMethod": "GET"
+        }
+      },
+      {
+        "name": "setVarsMain",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "getContactByPhone",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "eBay",
+              "key": "companyName"
+            }
+          ],
+          "offset": {
+            "x": 10,
+            "y": -720
+          }
+        }
+      },
+      {
+        "name": "gatherMainMenuOptions",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "splitMainMenuOptionsDtmf",
+            "event": "keypress"
+          },
+          {
+            "next": "splitMainMenuOptionsSpeech",
+            "event": "speech"
+          },
+          {
+            "next": "retry_1",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "speech_timeout": "auto",
+          "offset": {
+            "x": 50,
+            "y": 520
+          },
+          "loop": 1,
+          "hints": "agent, support,sales",
+          "finish_on_key": "#",
+          "say": "To speak with a sales specialist advocate, press one or say sales.\n\nPress 2 or say support for assistance on new or existing requests.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "profanity_filter": "true",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "splitMainMenuOptionsDtmf",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "flexToAgent",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "1-Sales",
+                "arguments": [
+                  "{{widgets.gatherMainMenuOptions.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "next": "gatherSupportMenu",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "2-Support",
+                "arguments": [
+                  "{{widgets.gatherMainMenuOptions.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "2"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherMainMenuOptions.Digits}}",
+          "offset": {
+            "x": -310,
+            "y": 770
+          }
+        }
+      },
+      {
+        "name": "splitMainMenuOptionsSpeech",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "flexToAgent",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "advisor",
+                "arguments": [
+                  "{{widgets.gatherMainMenuOptions.SpeechResult}}"
+                ],
+                "type": "contains",
+                "value": "sales"
+              }
+            ]
+          },
+          {
+            "next": "gatherSupportMenu",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "support",
+                "arguments": [
+                  "{{widgets.gatherMainMenuOptions.SpeechResult}}"
+                ],
+                "type": "contains",
+                "value": "support"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherMainMenuOptions.SpeechResult}}",
+          "offset": {
+            "x": 240,
+            "y": 780
+          }
+        }
+      },
+      {
+        "name": "retry_1",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherMainMenuOptions",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 430,
+            "y": 520
+          },
+          "loop": 1,
+          "say": "I didn't get your choice, let's try again.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "gatherSupportMenu",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "splitSupportMenuDtmf",
+            "event": "keypress"
+          },
+          {
+            "next": "retry_2",
+            "event": "speech"
+          },
+          {
+            "next": "retry_2",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "speech_timeout": "auto",
+          "offset": {
+            "x": 430,
+            "y": 1090
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "Welcome to customer support services.\n\nTo report a new request, press 1.\n\nTo work with an existing request, press 2.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "profanity_filter": "true",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "splitSupportMenuDtmf",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "gatherNewCaseDescription",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "1-New",
+                "arguments": [
+                  "{{widgets.gatherSupportMenu.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "next": "gatherGetCase",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "2-Existing",
+                "arguments": [
+                  "{{widgets.gatherSupportMenu.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "2"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherSupportMenu.Digits}}",
+          "offset": {
+            "x": 470,
+            "y": 1390
+          }
+        }
+      },
+      {
+        "name": "retry_2",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherSupportMenu",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 850,
+            "y": 1170
+          },
+          "loop": 1,
+          "say": "I did not get your response. Let's try again.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "promptWait_2",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "flexToAgentNew",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 230,
+            "y": 3650
+          },
+          "loop": 1,
+          "say": "Please wait for the next available customer advocate.\n\nYour call may be recorded for quality purposes.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "flexToAgentNew",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "waitUrl": "",
+          "offset": {
+            "x": 230,
+            "y": 3950
+          },
+          "workflow": "WW1fc73fb0c733ad6307f3e3f87dfa2003",
+          "channel": "TCc547531085fc8aeef73476f32eedf1de",
+          "attributes": "{\n\"name\":\"{{trigger.call.From}}\",\n\"sfdcObjectId\":\"{{widgets.getCaseById.parsed.data.Id}}\"\n}",
+          "waitUrlMethod": "GET"
+        }
+      },
+      {
+        "name": "promptWait_3",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "flexToAgentExisting",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 190,
+            "y": 4440
+          },
+          "loop": 1,
+          "say": "Please wait for the next available customer advocate.\n\nYour call may be recorded for quality purposes.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "flexToAgentExisting",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "waitUrl": "",
+          "offset": {
+            "x": 220,
+            "y": 4710
+          },
+          "workflow": "WW1fc73fb0c733ad6307f3e3f87dfa2003",
+          "channel": "TCc547531085fc8aeef73476f32eedf1de",
+          "attributes": "{\n\"name\":\"{{trigger.call.From}}\",\n\"sfdcSearchString\":\"{{widgets.gatherGetCase.Digits}} \"\n}",
+          "waitUrlMethod": "GET"
+        }
+      },
+      {
+        "name": "gatherGetCase",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "gatherCaseConfirm",
+            "event": "keypress"
+          },
+          {
+            "next": "retry_3",
+            "event": "speech"
+          },
+          {
+            "next": "retry_3",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 730,
+            "y": 1690
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "Using your keypad, enter your request number followed by the pound sign.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "retry_3",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherGetCase",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1150,
+            "y": 1710
+          },
+          "loop": 1,
+          "say": "I did not get your response. Let's try again."
+        }
+      },
+      {
+        "name": "gatherCaseConfirm",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "splitCaseConfirmDtmf",
+            "event": "keypress"
+          },
+          {
+            "next": "splitCaseConfirmSpeech",
+            "event": "speech"
+          },
+          {
+            "next": "retry_4",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 760,
+            "y": 1990
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "You entered {{ widgets.gatherGetCase.Digits | replace: '', ' ' }} ,  Is this correct?\n\n\n\n\nPress 1 or say yes.\nPress 2 or say no.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "splitCaseConfirmDtmf",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "retryGetCaseNumber_1",
+            "event": "noMatch"
+          },
+          {
+            "next": "getCaseByNumber",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "1-Yes",
+                "arguments": [
+                  "{{widgets.gatherCaseConfirm.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "next": "retryGetCaseNumber_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "2-No",
+                "arguments": [
+                  "{{widgets.gatherCaseConfirm.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "2"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherCaseConfirm.Digits}}",
+          "offset": {
+            "x": 780,
+            "y": 2430
+          }
+        }
+      },
+      {
+        "name": "splitCaseConfirmSpeech",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "retryGetCaseNumber_1",
+            "event": "noMatch"
+          },
+          {
+            "next": "getCaseByNumber",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "Yes",
+                "arguments": [
+                  "{{widgets.gatherCaseConfirm.SpeechResult}}"
+                ],
+                "type": "contains",
+                "value": "Yes"
+              }
+            ]
+          },
+          {
+            "next": "retryGetCaseNumber_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "No",
+                "arguments": [
+                  "{{widgets.gatherCaseConfirm.SpeechResult}}"
+                ],
+                "type": "contains",
+                "value": "No"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherCaseConfirm.SpeechResult}}",
+          "offset": {
+            "x": 1200,
+            "y": 2430
+          }
+        }
+      },
+      {
+        "name": "retry_4",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherCaseConfirm",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1150,
+            "y": 2000
+          },
+          "loop": 1,
+          "say": "I did not get your response. Let's try again."
+        }
+      },
+      {
+        "name": "retryGetCaseNumber_1",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherGetCase",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 1700,
+            "y": 2220
+          },
+          "loop": 1,
+          "say": "Let's try again.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "getContactByPhone",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "contactFound",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 20,
+            "y": -490
+          },
+          "parameters": [
+            {
+              "value": "{{trigger.call.From}}",
+              "key": "phoneNumber"
+            }
+          ],
+          "url": "https://ginger-deer-8262.twil.io/getContactByPhone"
+        }
+      },
+      {
+        "name": "contactFound",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "setVarsContact",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "true",
+                "arguments": [
+                  "{{widgets.getContactByPhone.parsed.found}}"
+                ],
+                "type": "equal_to",
+                "value": "true"
+              }
+            ]
+          },
+          {
+            "next": "contactNotFound",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "false",
+                "arguments": [
+                  "{{widgets.getContactByPhone.parsed.found}}"
+                ],
+                "type": "equal_to",
+                "value": "false"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.getContactByPhone.parsed.found}}",
+          "offset": {
+            "x": 30,
+            "y": -250
+          }
+        }
+      },
+      {
+        "name": "setVarsContact",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "welcomeContactFound",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{widgets.getContactByPhone.parsed.data.Id}}",
+              "key": "contactId"
+            },
+            {
+              "value": "{{widgets.getContactByPhone.parsed.data.FirstName}} {{widgets.getContactByPhone.parsed.data.LastName}}",
+              "key": "customerName"
+            }
+          ],
+          "offset": {
+            "x": -240,
+            "y": -30
+          }
+        }
+      },
+      {
+        "name": "contactNotFound",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherMainMenuOptions",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 460,
+            "y": 180
+          },
+          "loop": 1,
+          "say": "Welcome to {{widgets.setVarsMain.companyName}} ,",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "gatherNewCaseDescription",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "retry_5",
+            "event": "keypress"
+          },
+          {
+            "next": "gatherNewCasePriority",
+            "event": "speech"
+          },
+          {
+            "next": "retry_5",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 161,
+            "y": 1726
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "In a few words, provide a description of your immediate problem or needs.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "gatherNewCasePriority",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "Copy_of_splitNewCasePriority",
+            "event": "keypress"
+          },
+          {
+            "next": "splitNewCasePriority",
+            "event": "speech"
+          },
+          {
+            "next": "retry_6",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 190,
+            "y": 1990
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "Specify the urgency or priority of your request.\n\nOptions for the priority of this request are \"low\", \"medium\" or \"high\".",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "splitNewCasePriority",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "retry_6",
+            "event": "noMatch"
+          },
+          {
+            "next": "setVarsNewCase",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "low",
+                "arguments": [
+                  "{{widgets.gatherNewCasePriority.SpeechResult}}"
+                ],
+                "type": "contains",
+                "value": "low"
+              }
+            ]
+          },
+          {
+            "next": "setVarsNewCase",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "medium",
+                "arguments": [
+                  "{{widgets.gatherNewCasePriority.SpeechResult}}"
+                ],
+                "type": "contains",
+                "value": "medium"
+              }
+            ]
+          },
+          {
+            "next": "setVarsNewCase",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "high",
+                "arguments": [
+                  "{{widgets.gatherNewCasePriority.SpeechResult}}"
+                ],
+                "type": "contains",
+                "value": "high"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherNewCasePriority.SpeechResult}}",
+          "offset": {
+            "x": 280,
+            "y": 2270
+          }
+        }
+      },
+      {
+        "name": "setVarsNewCase",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "varSubject",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{widgets.gatherNewCasePriority.SpeechResult}}",
+              "key": "priority"
+            }
+          ],
+          "offset": {
+            "x": 200,
+            "y": 2660
+          }
+        }
+      },
+      {
+        "name": "createCaseNew",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "getCaseById",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 200,
+            "y": 3110
+          },
+          "parameters": [
+            {
+              "value": "{{widgets.setVarsContact.contactId}}",
+              "key": "contactId"
+            },
+            {
+              "value": "{{flow.variables.subject}}",
+              "key": "subject"
+            },
+            {
+              "value": "{{flow.variables.priority}}",
+              "key": "priority"
+            }
+          ],
+          "url": "https://ginger-deer-8262.twil.io/postCaseCreate"
+        }
+      },
+      {
+        "name": "getCaseById",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "promptWait_2",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 220,
+            "y": 3370
+          },
+          "parameters": [
+            {
+              "value": "{{widgets.createCaseNew.parsed.data.id}}",
+              "key": "caseId"
+            }
+          ],
+          "url": "https://ginger-deer-8262.twil.io/getCaseById"
+        }
+      },
+      {
+        "name": "retry_6",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherNewCasePriority",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": -520,
+            "y": 2100
+          },
+          "loop": 1,
+          "say": "I didn't get your response. please try again.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "retry_5",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherNewCaseDescription",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": -220,
+            "y": 1730
+          },
+          "loop": 1,
+          "say": "I didn't get your response. please try again.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "getCaseByNumber",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "splitGetCaseByNumberFound",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 800,
+            "y": 2740
+          },
+          "parameters": [
+            {
+              "value": "{{widgets.gatherGetCase.Digits}}",
+              "key": "caseNumber"
+            }
+          ],
+          "url": "https://ginger-deer-8262.twil.io/getCaseByNumber"
+        }
+      },
+      {
+        "name": "splitGetCaseByNumberFound",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "setVarsCase",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "true",
+                "arguments": [
+                  "{{widgets.getCaseByNumber.parsed.found}}"
+                ],
+                "type": "equal_to",
+                "value": "true"
+              }
+            ]
+          },
+          {
+            "next": "retryGetCaseNumber_2",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "false",
+                "arguments": [
+                  "{{widgets.getCaseByNumber.parsed.found}}"
+                ],
+                "type": "equal_to",
+                "value": "false"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.getCaseByNumber.parsed.found}}",
+          "offset": {
+            "x": 820,
+            "y": 2990
+          }
+        }
+      },
+      {
+        "name": "retryGetCaseNumber_2",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherGetCase",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 1590,
+            "y": 2940
+          },
+          "loop": 1,
+          "say": "A request with number \n\n{{widgets.gatherGetCase.Digits}} was not found.\nLet's try again.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "setVarsCase",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "sayCaseStatus",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{widgets.getCaseByNumber.parsed.data.Id}}",
+              "key": "caseId"
+            },
+            {
+              "value": "{{widgets.getCaseByNumber.parsed.data.ContactId}}",
+              "key": "caseContactId"
+            },
+            {
+              "value": "{{widgets.getCaseByNumber.parsed.data.CaseNumber}}",
+              "key": "caseNumber"
+            },
+            {
+              "value": "{{widgets.getCaseByNumber.parsed.data.Subject}}",
+              "key": "caseSubject"
+            },
+            {
+              "value": "{{widgets.getCaseByNumber.parsed.data.Description}}",
+              "key": "caseDescription"
+            },
+            {
+              "value": "{{widgets.getCaseByNumber.parsed.data.Status}}",
+              "key": "caseStatus"
+            }
+          ],
+          "offset": {
+            "x": 840,
+            "y": 3270
+          }
+        }
+      },
+      {
+        "name": "sayCaseStatus",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherExistCaseMenu",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 840,
+            "y": 3510
+          },
+          "loop": 1,
+          "say": "Your request ( \n{{widgets.setVarsCase.caseNumber | replace: '', ' '}}  ) with title \"{{widgets.setVarsCase.caseSubject}}\" currently has the status \"{{widgets.setVarsCase.caseStatus}} \"",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "gatherExistCaseMenu",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "splitExistCaseMenu",
+            "event": "keypress"
+          },
+          {
+            "next": "retryExistCaseManu",
+            "event": "speech"
+          },
+          {
+            "next": "retryExistCaseManu",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "speech_timeout": "auto",
+          "offset": {
+            "x": 860,
+            "y": 3770
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "Press 1 to speak with a customer advocate.\n\nPress 2 to provide an update on your ticket or case.\n\nPress 3 to disconnect if you are satisfied with your ticket inquiry.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "profanity_filter": "true",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "splitExistCaseMenu",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "promptWait_3",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "1-agent",
+                "arguments": [
+                  "{{widgets.gatherExistCaseMenu.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "next": "gatherExistCaseUpdate",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "2-update",
+                "arguments": [
+                  "{{widgets.gatherExistCaseMenu.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "2"
+              }
+            ]
+          },
+          {
+            "next": "sayExistBye",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "3-bye",
+                "arguments": [
+                  "{{widgets.gatherExistCaseMenu.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "3"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherExistCaseMenu.Digits}}",
+          "offset": {
+            "x": 900,
+            "y": 4060
+          }
+        }
+      },
+      {
+        "name": "retryExistCaseManu",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherExistCaseMenu",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 1310,
+            "y": 3760
+          },
+          "loop": 1,
+          "say": "I did not capture your selection.  Let's try again.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "sayExistBye",
+        "type": "say-play",
+        "transitions": [
+          {
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 1950,
+            "y": 4390
+          },
+          "loop": 1,
+          "say": "Thank you for your inquiry. Goodbye.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "gatherExistCaseUpdate",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "retryExistCaseUpdate_1",
+            "event": "keypress"
+          },
+          {
+            "next": "gatherExistCaseUpdateConfirm",
+            "event": "speech"
+          },
+          {
+            "next": "retryExistCaseUpdate_1",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 1070,
+            "y": 4460
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "In a few words, describe the information update you wish to append to your request.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "retryExistCaseUpdate_1",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherExistCaseUpdate",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1490,
+            "y": 4520
+          },
+          "loop": 1,
+          "say": "I did not capture your update.\n\nPlease try again."
+        }
+      },
+      {
+        "name": "gatherExistCaseUpdateConfirm",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "splitExistCaseConfirm",
+            "event": "keypress"
+          },
+          {
+            "next": "retryExistCaseUpdate_2",
+            "event": "speech"
+          },
+          {
+            "next": "retryExistCaseUpdate_2",
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 1060,
+            "y": 4760
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "I captured your update to this ticket as:\n\n{{widgets.gatherExistCaseUpdate.SpeechResult}} .\n\nIs this correct?\n\nPress 1 for yes.  Press 2 for no.",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "splitExistCaseConfirm",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "setVarsCaseUpdateTemplate",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "1-yes",
+                "arguments": [
+                  "{{widgets.gatherExistCaseUpdateConfirm.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "next": "retryExistCaseUpdate",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "2-no",
+                "arguments": [
+                  "{{widgets.gatherExistCaseUpdateConfirm.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "2"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherExistCaseUpdateConfirm.Digits}}",
+          "offset": {
+            "x": 1070,
+            "y": 5080
+          }
+        }
+      },
+      {
+        "name": "retryExistCaseUpdate_2",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherExistCaseUpdateConfirm",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1720,
+            "y": 4820
+          },
+          "loop": 1,
+          "say": "I did not capture your update.\nPlease try again."
+        }
+      },
+      {
+        "name": "retryExistCaseUpdate",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "gatherExistCaseUpdate",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 670,
+            "y": 4610
+          },
+          "loop": 1,
+          "say": "Let's try again.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "setVarsCaseUpdateTemplate",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "createCaseComment",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "CaseUpdate from channel: SMS\nChannelContact: {{trigger.message.ChannelAttributes.from}} \nCaseNumber:  {{widgets.setVarsCase.caseNumber}}\nCase Update Details:",
+              "key": "caseUpdateTemplate"
+            }
+          ],
+          "offset": {
+            "x": 1080,
+            "y": 5410
+          }
+        }
+      },
+      {
+        "name": "createCaseComment",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "gatherExistCaseEnd",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1080,
+            "y": 5630
+          },
+          "parameters": [
+            {
+              "value": "{{widgets.setVarsCase.caseId}}",
+              "key": "parentId"
+            },
+            {
+              "value": "{{widgets.gatherExistCaseUpdate.SpeechResult}}",
+              "key": "comment"
+            },
+            {
+              "value": "{{widgets.setVarsCaseUpdateTemplate.caseUpdateTemplate}}",
+              "key": "caseTemplate"
+            }
+          ],
+          "url": "https://ginger-deer-8262.twil.io/postCaseComment"
+        }
+      },
+      {
+        "name": "gatherExistCaseEnd",
+        "type": "gather-input-on-call",
+        "transitions": [
+          {
+            "next": "splitExistCaseEnd",
+            "event": "keypress"
+          },
+          {
+            "event": "speech"
+          },
+          {
+            "event": "timeout"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "speech_timeout": "auto",
+          "offset": {
+            "x": 1100,
+            "y": 5910
+          },
+          "loop": 1,
+          "finish_on_key": "#",
+          "say": "Your update has been successfully captured and the care team notified.\nThank you for your inquiry.\n\nTo speak with a customer advocate, press 1.\n\nTo end this support call, press 2",
+          "language": "en-US",
+          "stop_gather": true,
+          "gather_language": "en",
+          "profanity_filter": "true",
+          "timeout": 5
+        }
+      },
+      {
+        "name": "splitExistCaseEnd",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "wait_3",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "1-agent",
+                "arguments": [
+                  "{{widgets.gatherExistCaseEnd.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "next": "sayGoodbye",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "2-bye",
+                "arguments": [
+                  "{{widgets.gatherExistCaseEnd.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "2"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherExistCaseEnd.Digits}}",
+          "offset": {
+            "x": 1110,
+            "y": 6190
+          }
+        }
+      },
+      {
+        "name": "wait_3",
+        "type": "say-play",
+        "transitions": [
+          {
+            "next": "send_to_flex_1",
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 750,
+            "y": 6433
+          },
+          "loop": 1,
+          "say": "Please wait for the next customer advocate.\n\nYour call may be recorded for quality purposes.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "send_to_flex_1",
+        "type": "send-to-flex",
+        "transitions": [
+          {
+            "event": "callComplete"
+          },
+          {
+            "event": "failedToEnqueue"
+          },
+          {
+            "event": "callFailure"
+          }
+        ],
+        "properties": {
+          "waitUrl": "",
+          "offset": {
+            "x": 760,
+            "y": 6660
+          },
+          "workflow": "WW1fc73fb0c733ad6307f3e3f87dfa2003",
+          "channel": "TCc547531085fc8aeef73476f32eedf1de",
+          "attributes": "{\n\"name\":\"{{trigger.call.From}}\",\n\"sfdcSearchString\":\"{{widgets.gatherGetCase.Digits}} \"\n}",
+          "waitUrlMethod": "GET"
+        }
+      },
+      {
+        "name": "sayGoodbye",
+        "type": "say-play",
+        "transitions": [
+          {
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "voice": "Polly.Joanna",
+          "offset": {
+            "x": 1492,
+            "y": 6564
+          },
+          "loop": 1,
+          "say": "Thank you for your service inquiry.  Goodbye.",
+          "language": "en-US"
+        }
+      },
+      {
+        "name": "Copy_of_splitNewCasePriority",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "varSetPriority_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "low",
+                "arguments": [
+                  "{{widgets.gatherNewCasePriority.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "next": "varSetPriority_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "medium",
+                "arguments": [
+                  "{{widgets.gatherNewCasePriority.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "2"
+              }
+            ]
+          },
+          {
+            "next": "varSetPriority_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "high",
+                "arguments": [
+                  "{{widgets.gatherNewCasePriority.Digits}}"
+                ],
+                "type": "equal_to",
+                "value": "3"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.gatherNewCasePriority.Digits}}",
+          "offset": {
+            "x": -130,
+            "y": 2270
+          }
+        }
+      },
+      {
+        "name": "varSetPriority_1",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "varSubject",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "high",
+              "key": "priority"
+            }
+          ],
+          "offset": {
+            "x": -180,
+            "y": 2640
+          }
+        }
+      },
+      {
+        "name": "varSubject",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "createCaseNew",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{widgets.gatherNewCaseDescription.SpeechResult}}",
+              "key": "subject"
+            }
+          ],
+          "offset": {
+            "x": -100,
+            "y": 2930
+          }
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }
