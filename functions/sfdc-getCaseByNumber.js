@@ -14,14 +14,13 @@
 let jsforce = require("jsforce");
 
 exports.handler = function (context, event, callback) {
-  console.log(`\n********\nOnwer Lookup`);
+  console.log("Get Case By Number");
   console.log("Current date and time:", new Date().toLocaleString());
-  //   define result as return JSON object
-  let result = {};
-  //  get Input number for lookup
-  let ownerID = event.sessionInfo.parameters.caseOwnerId;
 
-  console.log(`Lookup query: ${ownerID}`);
+  //  get Input number for lookup
+  let caseNumber = event.caseNumber;
+
+  console.log(`Lookup query: ${caseNumber}`);
 
   //  create a connection object to SFDC
   let conn = new jsforce.Connection({
@@ -41,44 +40,15 @@ exports.handler = function (context, event, callback) {
       callback(null, { error: err });
     }
     //  lookup contact query
-    let query = `SELECT Name, Email, Flex_WorkerId__c FROM User where Id='${ownerID}'`;
+    const query = `SELECT Id, ContactId, OwnerId, AccountId, CaseNumber, Subject, Description, Status FROM Case WHERE CaseNumber LIKE '%${caseNumber}%'`;
     //  execute query
     conn.query(query, function (err, resp) {
       if (err) {
         console.log(err);
         callback(null, err);
       }
-      if (resp.totalSize === 0) {
-        result = { sfdcCaseOwner: { status: "not_found", data: resp } };
-      }
-      if (resp.totalSize == 1) {
-        result = { sfdcCaseOwner: { status: "found", data: resp } };
-      }
-      if (resp.totalSize > 1) {
-        result = { sfdcCaseOwner: { status: "multiple_records", data: resp } };
-      }
-      console.log(
-        "Data returned from SFDC: ",
-        result.sfdcCaseOwner.data,
-        "\n\n\n"
-      );
-
-      result = {
-        pageInfo: {},
-        sessionInfo: {
-          session: event.sessionInfo.session,
-          parameters: {
-            ...result,
-          },
-        },
-      };
-      console.log(
-        result,
-        `\nsize of result: ${
-          Math.round((JSON.stringify(result).length / 1024) * 100) / 100
-        } KB\n**********\n\n`
-      );
-      callback(null, result);
+      console.log("Data returned from SFDC: ", resp, "\n\n\n");
+      callback(null, resp);
     });
   });
 };

@@ -1,0 +1,9 @@
+This tool is to escalate the call to a human and can use an input of the workerSid and caseId retireved from the case owner lookup and get open cases or get case details tools. Use this tool when the user wants to speak with a supervisor or when you are not able to fulfill their request. ALWAYS tell the user you are transferring them to a Supervisor before using this tool.
+
+Use the workerSid derived from (Flex_WorkerId__c) in the case owner lookup tool and caseId is the ID field from Get Open Cases or getCaseDetails tools. Never falsify these inputs. If you don't have them, send without them. 
+
+
+OLD
+This tool is to escalate the call to a human. BEFORE USING THIS TOOL: You MUST get the case owner details using the Case Owner Lookup and ultimately the Flex_WorkerId__c. The caseId will also be needed as well. The ONLY exception is if there are no cases that match the customer's request. Use this tool when the user wants to speak with a supervisor or when you are not able to fulfill their request. ALWAYS tell the user you are transferring them to a Supervisor before using this tool.
+
+Use the Flex_WorkerId__c from the case owner details for the workerSid and do NOT falsify this information. caseId is the ID field from Get Open Cases or getCaseDetails tools.

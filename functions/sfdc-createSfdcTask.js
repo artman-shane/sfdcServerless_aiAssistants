@@ -24,7 +24,7 @@ let moment = require('moment-timezone')
 
 
 exports.handler = function(context, event, callback) {
-
+console.log('SFDC Create Task')
     //   define result as return JSON object
     let result = {}
     let sfdcData = {}

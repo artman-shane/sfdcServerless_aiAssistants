@@ -129,3 +129,9 @@ MIT
 
 ### Author Details
 Original work: cavila@twilio.com
+
+### Deploy Conversations for chat
+twilio api:conversations:v1:services:configuration:webhooks:update \
+    --post-webhook-url=https://shane.ngrok.io/channels/conversations/messageAdded \
+    --chat-service-sid=IS109ab255c5ce4602a7fe868133ef572c \
+    --filter=onMessageAdded

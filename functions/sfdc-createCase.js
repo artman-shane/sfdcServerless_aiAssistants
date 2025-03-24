@@ -19,6 +19,7 @@ let jsforce = require('jsforce')
 
 
 exports.handler = function(context, event, callback) {
+    console.log('SFDC Create Case')
 
     //   define result as return JSON object
     let result = {}

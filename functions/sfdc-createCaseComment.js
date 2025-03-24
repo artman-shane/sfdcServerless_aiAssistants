@@ -15,8 +15,7 @@
 let jsforce = require("jsforce");
 
 exports.handler = function (context, event, callback) {
-  console.log(event);
-  console.log(`\n********\nCreate Case Comment`);
+  console.log(`Create Case Comment`);
   console.log("Current date and time:", new Date().toLocaleString());
 
   //   define result as return JSON object

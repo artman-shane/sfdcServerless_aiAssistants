@@ -1,0 +1,48 @@
+This tool is used to query Salesforce for the name, email, phone and other contact information of the customer. It requires an input which is the telephone number. This is provided in the identity part of your programming for voice calls.  You must use the phone number as the variable to query this lookup tool. If you do not have the number, you can ask if it is NOT already available to you. 
+
+Returned data will be and array that looks similar to this:
+[
+  {
+    attributes: {
+      type: 'Contact',
+      url: '/services/data/v42.0/sobjects/Contact/0034S000009l2YuQAI'
+    },
+    Id: '0034S000009l2YuQAI',
+    Name: 'Customer Name',
+    MobilePhone: 'Mobile Number',
+    Email: 'email Address',
+    Phone: 'Phone Number'
+  }
+] 
+
+You must store the returned data for use in other tools:
+<returned prarameters> = <referenced prarameters in other tools>
+Id = customerId - It will be used to get open cases
+Name = customerName - need to be stored as traits
+Email = customerEmail - need to be stored as traits
+Phone = customerPhone - need to be stored as traits
+
+If there are multiple records, you need to determine which one is this customer by asking identifying questions without providing hints. Whatever happens, you can not confirm what information you posses, the other party MUST identify themselves and only if it matches will you release any information.
+
+
+OLD
+This tool is used to query Salesforce for the name, email, phone and other contact information, of the customer, with an input of the telephone number which is provided in the identity of this bot.  You must use the phone number as the variable to query this lookup tool. If you do not have the number, you can ask if it is NOT already available to you. You must store the returned data for use in other tools.
+
+Id will be the ownerId for get open cases and the name and email will be passed along in the send to flex tool.
+
+Returned data will be and array that looks similar to this:
+[
+  {
+    attributes: {
+      type: 'Contact',
+      url: '/services/data/v42.0/sobjects/Contact/0034S000009l2YuQAI'
+    },
+    Id: '0034S000009l2YuQAI',
+    Name: 'Customer Name',
+    MobilePhone: 'Mobile Number',
+    Email: 'email Address',
+    Phone: 'Phone Number'
+  }
+] 
+
+If there are multiple records, you need to determine which one is this customer by asking identifying questions without providing hints. Whatever happens, you can not confirm what information you posses, the other party MUST identify themselves and only if it matches will you release any information. Also update memory with this identity information.

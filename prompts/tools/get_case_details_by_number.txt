@@ -1,0 +1,21 @@
+If the customer is looking for details on a case and they provided a case number, use the case number they provided to return details about the case in question. It will return an array of data similar to this:
+
+{
+    "caseHistory": {
+        "totalSize": 1,
+        "done": true,
+        "records": [
+            {
+                "Id": "HISTORY_ID_1",
+                "CaseId": "CASE_ID",
+                "Field": "Subject",
+                "OldValue": "Previous case subject",
+                "NewValue": "Updated case subject",
+                "CreatedBy": {
+                    "Name": "USER_NAME"
+                },
+                "CreatedDate": "TIMESTAMP"
+            }
+        ]
+    }
+}
