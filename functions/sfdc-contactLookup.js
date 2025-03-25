@@ -3,6 +3,7 @@ const {
   lookupContact,
   getOpenCases,
   connectToSfdc,
+  pushSyncData,
 } = require("../assets/sfdc-functions.private.js");
 
 exports.handler = async function (context, event, callback) {
@@ -16,7 +17,7 @@ exports.handler = async function (context, event, callback) {
 
     const conn = await connectToSfdc(context);
     const contacts = await lookupContact(event, conn);
-    console.log("Contacts: ", contacts);
+    // console.log("Contacts: ", contacts);
 
     contacts.map((contact) => {
       console.log("Contact: ", contact.Id);
@@ -34,8 +35,11 @@ exports.handler = async function (context, event, callback) {
         return contact.Id;
       });
       const openCases = await getOpenCases(contactId, conn);
-      console.log("Once contact found.");
-      callback(null, { contact: contacts, openCases: openCases });
+      console.log("One contact found.");
+      const data = { contact: contacts, openCases: openCases };
+      const syncDoc = await pushSyncData(context, event, data);
+      // console.log("Sync Doc: ", syncDoc);
+      callback(null, data);
     } else {
       console.log("No contact found");
       return callback(null, {

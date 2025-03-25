@@ -10,7 +10,7 @@ async function lookupContact(event, conn) {
 
   // check for the x-identity header
   const identityHeader = event.request.headers["x-identity"];
-  console.log(identityHeader);
+  console.log("Identity Header: ", identityHeader);
   if (!identityHeader) {
     console.log("Missing x-identity header");
     return {
@@ -105,41 +105,48 @@ async function getOpenCases(contactId, conn) {
  **/
 
 async function getCaseDetails(caseId, conn) {
-  // check for the x-identity header
-
-  console.log(`Get Open Cases`);
   console.log(`Lookup query: ${caseId}`);
 
   try {
-    //  define number of records to return
-    const limit = 10;
-
+    // Query for case history
     const caseHistoryQuery = `
       SELECT Id, CaseId, Field, OldValue, NewValue, CreatedBy.Name, CreatedDate 
       FROM CaseHistory
-      WHERE CaseId = '${caseId}'`;
+      WHERE CaseId = '${caseId}'
+    `;
 
-    //  lookup contact query
-    const caseCommentsQuery = `SELECT Id, CommentBody, CreatedBy.Name, CreatedDate FROM CaseComments)
-      FROM Case
-      WHERE Id = '${caseId}'`;
-    //  execute query
-    try {
-      const caseHistory = await querySfdc(caseHistoryQuery, conn);
-      const caseComments = await querySfdc(caseCommentsQuery, conn);
-      const caseDetails = {
-        caseHistory,
-        caseComments,
-      };
-      console.log("Case details: ", caseDetails);
-      return caseDetails;
-    } catch (e) {
-      console.log("There was an error in the query", e);
-      return `Error: e`;
+    // Corrected subquery for case comments
+    const caseCommentsQuery = `SELECT Id, CaseNumber, ContactId, OwnerId, Subject, Description, Status, CreatedDate, LastModifiedDate, 
+      (SELECT Id, CommentBody, CreatedBy.Name, CreatedDate FROM CaseComments)
+    FROM Case
+    WHERE Id = '${caseId}'`;
+
+    // Execute queries for case history and comments
+    const caseHistory = await querySfdc(caseHistoryQuery, conn);
+    const caseInfo = await querySfdc(caseCommentsQuery, conn);
+
+    // Query to get Owner Id (with corrected quotes)
+    const caseOwnerQuery = `SELECT OwnerId FROM Case WHERE Id ='${caseId}'`;
+    const caseOwnerResult = await querySfdc(caseOwnerQuery, conn);
+    const caseOwnerId =
+      caseOwnerResult.length > 0 ? caseOwnerResult[0].OwnerId : null;
+
+    // Query for worker details based on the retrieved Owner Id
+    let workerDetails = [];
+    if (caseOwnerId) {
+      const workerDetailsQuery = `SELECT Name, Email, Flex_WorkerId__c FROM User WHERE Id='${caseOwnerId}'`;
+      workerDetails = await querySfdc(workerDetailsQuery, conn);
     }
+
+    const caseDetails = {
+      caseHistory,
+      caseInfo,
+      workerDetails,
+    };
+    // console.log("Case details: ", caseDetails);
+    return caseDetails;
   } catch (e) {
-    console.log("There was a problem", e);
-    console.log(e);
+    console.log("There was an error in the query", e);
     return `Error: ${e}`;
   }
 }
@@ -168,9 +175,9 @@ async function connectToSfdc(context) {
  */
 async function querySfdc(query, conn) {
   try {
-    console.log("Executing Query...");
+    console.log("Executing Query: ", query);
     const resp = await conn.query(query);
-    console.log("Data returned from SFDC: ", resp.records);
+    // console.log("Data returned from SFDC: ", resp.records);
     return resp.records;
   } catch (err) {
     console.log("Error: ", err);
@@ -178,4 +185,102 @@ async function querySfdc(query, conn) {
   }
 }
 
-module.exports = { lookupContact, getOpenCases, getCaseDetails, connectToSfdc };
+/**
+ *
+ * @param {import('@twilio-labs/serverless-runtime-types/types').Context} context
+ * @param {string} sessionId
+ * @returns {object} syncDoc
+ */
+async function getSyncData(context, event) {
+  console.log("Get Sync Data");
+  const sessionId = event.request.headers["x-session-id"]
+    .trim()
+    .replace(/[^a-zA-Z0-9]/g, "");
+  const client = context.getTwilioClient();
+  const syncService = context.SYNC_SERVICE_SID.trim();
+  const syncDoc = sessionId;
+
+  try {
+    const syncDocData = await client.sync.v1
+      .services(syncService)
+      .documents(syncDoc)
+      .fetch();
+    return syncDocData;
+  } catch (e) {
+    console.log("No doc found. Attempting to create one.");
+    const document = await client.sync.v1
+      .services(syncService)
+      .documents.create({ uniqueName: syncDoc, ttl: 300 });
+    return document;
+  }
+}
+
+/**
+ *
+ * @param {import('@twilio-labs/serverless-runtime-types/types').Context} context
+ * @param {import('@twilio-labs/serverless-runtime-types/types').Event} event
+ * @param {object} dataToPush
+ * @returns {object} syncDoc
+ */
+async function pushSyncData(context, event, data) {
+  console.log("Updating Sync Data");
+  const client = context.getTwilioClient();
+  const syncService = context.SYNC_SERVICE_SID;
+  const sessionId = event.request.headers["x-session-id"]
+    .trim()
+    .replace(/[^a-zA-Z0-9]/g, "");
+  console.log("sessionId: ", sessionId);
+
+  try {
+    // Retrieve the existing Sync Document
+    let document = null;
+    try {
+      document = await getSyncData(context, event);
+      // console.log("Returned Document: ", document);
+    } catch (e) {
+      console.log("Error: ", e);
+    }
+    // console.log("Existing Sync Document Data: ", document.data);
+    // Merge the current data with the additional data
+
+    const contact = data.contact ? data.contact : document.data.contact;
+    const openCases = data.openCases ? data.openCases : document.data.openCases;
+    const caseDetails = data.caseDetails
+      ? data.caseDetails
+      : document.data.caseDetails;
+    const summary = data.summary ? data.summary : document.data.summary;
+
+    const replacementData = {
+      contact: contact,
+      openCases: openCases,
+      caseDetails: caseDetails,
+      summary: summary,
+    };
+
+    // console.log("New Data for Doc: ", replacementData);
+
+    // Update the document with the merged data
+    const updatedDocument = await client.sync.v1
+      .services(syncService)
+      .documents(sessionId)
+      .update({ data: replacementData, ttl: 300 });
+    // console.log("Updated Doc: ", updatedDocument);
+    return updatedDocument;
+  } catch (error) {
+    console.error("Error: ", error);
+  }
+}
+
+module.exports = {
+  lookupContact,
+  getOpenCases,
+  getCaseDetails,
+  connectToSfdc,
+  pushSyncData,
+  getSyncData,
+};
+
+/**
+ * Using service syncId: IS126c0bcab30520104ea08551de60df10 and uniquename sessionId (syncDoc): voice:CA918dac84a523b4eeaa41bd20374a8b22/VXf2378c4a3051751882d6b0502b9b84a6
+ * Using service syncId: IS126c0bcab30520104ea08551de60df10 and uniquename sessionId (syncDoc): voice:CA918dac84a523b4eeaa41bd20374a8b22/VXf2378c4a3051751882d6b0502b9b84a6
+ */

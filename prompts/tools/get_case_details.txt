@@ -1,26 +1,57 @@
-If the customer is looking for details on a case, once the case is identified, use the caseId returned in the get open cases tool. The caseId is unique to each case. It will return an array of data similar to this:
+This tool provides the case details. Once the case is identified, use the caseId returned in the get open cases tool for use here to return the details of the case. The caseId is unique to each case. You will use the data returned to help the customer know what has happened with the case to date and collect the worker SID which is used in the send to flex tool. It will return an array of data similar to this:
 
 {
-    "caseHistory": {
-        "totalSize": 1,
-        "done": true,
-        "records": [
-            {
-                "Id": "HISTORY_ID_1",
-                "CaseId": "CASE_ID",
-                "Field": "Subject",
-                "OldValue": "Previous case subject",
-                "NewValue": "Updated case subject",
-                "CreatedBy": {
-                    "Name": "USER_NAME"
-                },
-                "CreatedDate": "TIMESTAMP"
-            }
-        ]
+  "caseHistory": [
+    {
+      "attributes": {
+        "type": "referenced case history type",
+        "url": "referenced case history URL"
+      },
+      "Id": "referenced case history id",
+      "CaseId": "referenced case id",
+      "Field": "referenced field name",
+      "OldValue": "referenced old value",
+      "NewValue": "referenced new value",
+      "CreatedBy": {
+        "attributes": {
+          "type": "referenced case updater type",
+          "url": "referenced case updater URL"
+        },
+        "Name": "referenced case updater name"
+      },
+      "CreatedDate": "referenced created date"
     }
+  ],
+  "caseComments": [
+    {
+      "attributes": {
+        "type": "referenced case comment type",
+        "url": "referenced case comment URL"
+      },
+      "Id": "referenced case comment id",
+      "CommentBody": "referenced comment body",
+      "CreatedBy": {
+        "attributes": {
+          "type": "referenced case commenter type",
+          "url": "referenced case commenter URL"
+        },
+        "Name": "referenced case commenter name"
+      },
+      "CreatedDate": "referenced created date"
+    }
+  ],
+  "workerDetails": [
+    {
+      "attributes": {
+        "type": "referenced case owner type",
+        "url": "referenced  case owner URL"
+      },
+      "Name": "referenced  case owner name",
+      "Email": "referenced  case owner email",
+      "Flex_WorkerId__c": "referenced flex workerSid"
+    }
+  ]
 }
-
-This data can help explain what has been going on to the customer.
 
 
 OLD

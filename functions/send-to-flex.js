@@ -1,40 +1,50 @@
+const { getSyncData } = require("../assets/sfdc-functions.private.js");
+
 /**
  * @param {import('@twilio-labs/serverless-runtime-types/types').Context} context
  * @param {{}} event
  * @param {import('@twilio-labs/serverless-runtime-types/types').ServerlessCallback} callback
  */
 exports.handler = async function (context, event, callback) {
+  /**
+   * Actual data sent!!!
+   * {
+   * "workerSid":"referenced flex workerSid",
+   * "caseId":"referenced case id",
+   * "caseNumber":"referenced case number",
+   * "summary":"Customer requested status on vehicle case related to radio issue. Case is new and under remote diagnosis. Customer wants to speak with an agent."
+   * }
+   */
   console.log("Send to Flex");
   const client = context.getTwilioClient();
-  console.log("Studio Flow Sid: ", context.STUDIO_FLOW_SID);
-  console.log("Account SID: ", context.ACCOUNT_SID);
+  console.log("Getting Sync Doc");
+  const syncDoc = await getSyncData(context, event);
+  const workerSid = syncDoc.data.caseDetails.workerDetails[0].Flex_WorkerId__c;
+  console.log("Worker SID (sync doc):", workerSid);
+  const caseNumber = syncDoc.data.caseDetails.caseInfo[0].CaseNumber;
+  console.log("Case Number (sync doc):", caseNumber);
+  const caseId = syncDoc.data.caseDetails.caseInfo[0].Id;
+  console.log("Case ID (sync doc):", caseId);
+  const summary = event.summary || "Customer requested to speak with an agent";
+  console.log("Summary (from LLM) (sync doc):", summary);
+  const sessionIdOrig = event.request.headers["x-session-id"];
+  const sessionId = sessionIdOrig.trim().replace(/[^a-zA-Z0-9]/g, "");
+  console.log("Session ID: ", sessionId);
 
-  const workerSid =
-    event.workerSid && event.workerSid.length === 18 ? event.workerSid : null;
-  const caseId =
-    event.caseId && event.caseId.length === 18 ? event.caseId : null;
-
-  console.log("Worker SID:", workerSid);
-  console.log("Case ID:", caseId);
-
-  const sessionId = event.request.headers["x-session-id"];
-  if (sessionId.startsWith("voice:")) {
+  if (sessionId.startsWith("voice")) {
     console.log("Forwarding call to Studio Flow");
     const redirectUrl =
       `https://webhooks.twilio.com/v1/Accounts/${context.ACCOUNT_SID}/Flows/${context.STUDIO_FLOW_SID}?FlowEvent=return` +
-      (caseId || workerSid
-        ? `&${caseId ? `caseId=${encodeURIComponent(caseId)}` : ""}${
-            workerSid ? `&workerSid=${encodeURIComponent(workerSid)}` : ""
-          }`
+      (syncDoc && (summary || workerSid || caseId || caseNumber)
+        ? `&amp;syncDoc=${encodeURIComponent(sessionId)}`
         : "");
 
-    console.log(
-      `<Response><Say>One second while we connect you</Say><Redirect>https://webhooks.twilio.com/v1/Accounts/${context.ACCOUNT_SID}/Flows/${context.STUDIO_FLOW_SID}?FlowEvent=return</Redirect></Response>`
-    );
-    const [callSid] = sessionId.replace("voice:", "").split("/");
+    console.log("Redirect URL: ", redirectUrl);
+    const [callSid] = sessionIdOrig.replace("voice:", "").split("/");
+    console.log("Call SID: ", callSid);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await client.calls(callSid).update({
-      twiml: `<Response><Say>One second while we connect you</Say><Redirect>https://webhooks.twilio.com/v1/Accounts/${context.ACCOUNT_SID}/Flows/${context.STUDIO_FLOW_SID}?FlowEvent=return</Redirect></Response>`,
+      twiml: `<Response><Say>One second while we connect you</Say><Redirect>${redirectUrl}</Redirect></Response>`,
     });
     return callback(null, "Call forwarded");
   }

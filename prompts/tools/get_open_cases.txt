@@ -1,33 +1,24 @@
-To use this tool, you will require an input. It will be the remembered trait of customerId which was provided in the contact lookup tool. This tool will return a list of open cases. The data returned from the open cases will be an array of cases similar to this:
+To use this tool, you will require an input. It will be the remembered trait of customerId which was provided as a result of the contact lookup tool. This tool will return a list of open cases. Multiple cases may be returned so it is your job to identify which one the customer is calling about. Use that to get case details using the get case details tool and referencing the ID of the case from here. That case number will be used in the send to flex tool later so remember that too. The data returned from the open cases will be an array of cases similar to this:
 
- [
+[
   {
-    attributes: {
-      type: 'Case',
-      url: '/services/data/v42.0/sobjects/Case/<case number replaced here>'
+    "attributes": {
+      "type": "referenced case type",
+      "url": "referenced case URL"
     },
-    Id: 'Case ID',
-    CaseNumber: 'Case Number',
-    ContactId: 'Contact ID of customer',
-    OwnerId: 'Agnet that owns the case',
-    Subject: 'Subject of the case,
-    Description: "Description of the case",
-    Status: 'state of the case',
-    CreatedDate: 'created date',
-    LastModifiedDate: 'last modified date'
+    "Id": "referenced case id",
+    "CaseNumber": "referenced case number",
+    "ContactId": "referenced contact id",
+    "OwnerId": "referenced owner id",
+    "Subject": "referenced case subject",
+    "Description": "referenced case description",
+    "Status": "the status of the case",
+    "CreatedDate": "referenced creation date",
+    "LastModifiedDate": "referenced last modified date"
   }
-] 
+]
 
-returned data:
-<data returned> = <how it is referenced in other tools>
-ID = caseId 
-OwnerId = ownerId
-Subject = caseSubject
-Description = caseDescription
-Status = caseStatus
-CaseNumber = caseNumber
 
-Multiple cases can be returned so it is your job to identify which one the customer is calling about and store only that data for later use. If they need to change cases, you can come back and use this tool again.
 
 
 

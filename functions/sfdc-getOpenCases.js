@@ -1,6 +1,7 @@
 const {
   getOpenCases,
   connectToSfdc,
+  getSyncData,
 } = require("../assets/sfdc-functions.private.js");
 
 exports.handler = async function (context, event, callback) {
@@ -11,7 +12,9 @@ exports.handler = async function (context, event, callback) {
   // }
   // Create a connection to SFDC
 
-  let contactId = event.contactId;
+  // console.log("Session ID: ", sessionId);
+  const syncDoc = await getSyncData(context, event);
+  let contactId = syncDoc.data.contact[0].Id;
   console.log(`Lookup query: ${contactId}`);
 
   //  define number of records to return
