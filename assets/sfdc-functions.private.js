@@ -170,7 +170,7 @@ async function connectToSfdc(context) {
 /**
  *
  * @param {stinrg} query
- * @param {object} conn
+ * @param {jsforce.Connection} conn
  * @returns
  */
 async function querySfdc(query, conn) {
@@ -193,9 +193,9 @@ async function querySfdc(query, conn) {
  */
 async function getSyncData(context, event) {
   console.log("Get Sync Data");
-  const sessionId = event.request.headers["x-session-id"]
-    .trim()
-    .replace(/[^a-zA-Z0-9]/g, "");
+  const sessionId = event.syncDocId
+    ? event.syncDocId
+    : event.request.headers["x-session-id"].trim().replace(/[^a-zA-Z0-9]/g, "");
   const client = context.getTwilioClient();
   const syncService = context.SYNC_SERVICE_SID.trim();
   const syncDoc = sessionId;
@@ -271,6 +271,49 @@ async function pushSyncData(context, event, data) {
   }
 }
 
+/**
+ * @param {import('@twilio-labs/serverless-runtime-types/types').Context} context
+ * @param {jsforce.Connection} conn
+ * @param {string} documentId
+ */
+async function deleteSyncData(context, documentId) {
+  console.log("Deleting Sync Data");
+  const client = context.getTwilioClient();
+  const syncService = context.SYNC_SERVICE_SID;
+
+  const response = await client.sync.v1
+    .services(syncService)
+    .documents(documentId)
+    .remove();
+  console.log("Deleted Doc: ", response);
+  return response;
+}
+
+/**
+ *
+ * @param {jsforce.Connection} conn
+ * @param {string} caseId
+ * @param {string} comment
+ */
+async function createCaseComment(conn, caseId, comment) {
+  console.log("Create a case comment");
+  conn.sobject("CaseComment").create(
+    {
+      ParentId: caseId,
+      CommentBody: comment,
+      IsPublished: "true",
+    },
+    (err, resp) => {
+      if (err || !resp.success) {
+        console.log(err);
+        return "There was an error:", err;
+      }
+      // console.log("Case Comment created: ", resp);
+      return resp;
+    }
+  );
+}
+
 module.exports = {
   lookupContact,
   getOpenCases,
@@ -278,6 +321,8 @@ module.exports = {
   connectToSfdc,
   pushSyncData,
   getSyncData,
+  createCaseComment,
+  deleteSyncData,
 };
 
 /**

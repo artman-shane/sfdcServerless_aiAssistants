@@ -1,4 +1,9 @@
-const { getSyncData } = require("../assets/sfdc-functions.private.js");
+const { verifyRequest } = require("../assets/utils.private.js");
+const {
+  getSyncData,
+  connectToSfdc,
+  createCaseComment,
+} = require("../assets/sfdc-functions.private.js");
 
 /**
  * @param {import('@twilio-labs/serverless-runtime-types/types').Context} context
@@ -30,6 +35,11 @@ exports.handler = async function (context, event, callback) {
   const sessionIdOrig = event.request.headers["x-session-id"];
   const sessionId = sessionIdOrig.trim().replace(/[^a-zA-Z0-9]/g, "");
   console.log("Session ID: ", sessionId);
+  const conn = await connectToSfdc(context);
+
+  const caseCommentCreated =
+    caseId && conn ? await createCaseComment(caseId, summary, conn) : null;
+  console.log("Case Comment Created: ", caseCommentCreated);
 
   if (sessionId.startsWith("voice")) {
     console.log("Forwarding call to Studio Flow");
