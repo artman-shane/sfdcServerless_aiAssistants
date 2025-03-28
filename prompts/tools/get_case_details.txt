@@ -1,80 +1,16 @@
-This tool provides the case details. Once the case is identified, use the caseId returned in the get open cases tool for use here to return the details of the case. The caseId is unique to each case. You will use the data returned to help the customer know what has happened with the case to date and collect the worker SID which is used in the send to flex tool. It will return an array of data similar to this:
+Name:
+GetCaseDetails
 
-{
-  "caseHistory": [
-    {
-      "attributes": {
-        "type": "referenced case history type",
-        "url": "referenced case history URL"
-      },
-      "Id": "referenced case history id",
-      "CaseId": "referenced case id",
-      "Field": "referenced field name",
-      "OldValue": "referenced old value",
-      "NewValue": "referenced new value",
-      "CreatedBy": {
-        "attributes": {
-          "type": "referenced case updater type",
-          "url": "referenced case updater URL"
-        },
-        "Name": "referenced case updater name"
-      },
-      "CreatedDate": "referenced created date"
-    }
-  ],
-  "caseComments": [
-    {
-      "attributes": {
-        "type": "referenced case comment type",
-        "url": "referenced case comment URL"
-      },
-      "Id": "referenced case comment id",
-      "CommentBody": "referenced comment body",
-      "CreatedBy": {
-        "attributes": {
-          "type": "referenced case commenter type",
-          "url": "referenced case commenter URL"
-        },
-        "Name": "referenced case commenter name"
-      },
-      "CreatedDate": "referenced created date"
-    }
-  ],
-  "workerDetails": [
-    {
-      "attributes": {
-        "type": "referenced case owner type",
-        "url": "referenced  case owner URL"
-      },
-      "Name": "referenced  case owner name",
-      "Email": "referenced  case owner email",
-      "Flex_WorkerId__c": "referenced flex workerSid"
-    }
-  ]
-}
+Description:
+This tool provides the case details. Once the case is identified, use the caseId returned in the get open cases tool for use here to return the details of the case. The caseId is unique to each case. You will use the data returned to help the customer know what has happened with the case to date and collect the worker SID which is used in the send to flex tool. It will return an JSON object of data 
 
+HTTP Method:
+Post
 
-OLD
-This tool requires an input which you stored as ownerId from the get open cases tool. This tools returns the case owner details using ownerId. In order to use this tool, you MUST have previously used get open cases or get case details tools first. If you do not have the ownerID, you CANNOT use this tool.
+Webhook URL:
+https://{twilio_functions_domain}sfdc-getCaseDetails
 
-The returned data is an array, typically only a single owner, that look like this:
-
-[
-  {
-    attributes: {
-      type: 'User',
-      url: '/services/data/v42.0/sobjects/User/<owner id replaced here>'
-    },
-    Name: 'Owner Name',
-    Email: 'owner email address',
-    Flex_WorkerId__c: 'custom field with Twilio Flex Worker SID'
-  }
-] 
-
-returned data:
-<returned parameter> = <variable reference in other tools>
-Name = ownerName
-Email = ownerEmail
-Flex_WorkerId__c = workerSid
-
-This last value referenced later as workerSid is critical to remember. It is used in the send to flex tool.
+Input Schema:
+export type Data = { 
+caseId: string
+} 

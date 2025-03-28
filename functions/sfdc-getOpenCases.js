@@ -2,7 +2,7 @@ const {
   getOpenCases,
   connectToSfdc,
   getSyncData,
-} = require("../assets/sfdc-functions.private.js");
+} = require(Runtime.getAssets()["/sfdc-functions.js"].path);
 
 exports.handler = async function (context, event, callback) {
   console.log(`Get Open Cases`);

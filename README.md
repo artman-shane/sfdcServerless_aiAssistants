@@ -1,3 +1,21 @@
+# Setup
+## Conversation Relay Configuration
+You must setup a Twiml Bin to get the call over to conversation relay. This will be called from the studio flow. Here is the sample to use
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Connect>
+    <Assistant id="aia_asst_019321b2-d23f-7b89-9af1-38e569eec609" welcomeGreeting="Thank you for calling Rivian. How can I help you today?" ttsProvider="Elevenlabs" voice="OYTbf65OHHFELVut7v2H" language="en-US">
+    </Assistant>
+  </Connect>
+</Response>
+
+Female Voice examples:
+OYTbf65OHHFELVut7v2H - {'accent': 'american', 'descriptive': 'crisp', 'age': 'young', 'gender': 'female', 'language': 'en', 'use_case': 'conversational'}
+iCrDUkL56s3C8sCRl7wb - {'accent': 'american', 'descriptive': 'calm', 'age': 'young', 'gender': 'female', 'language': 'en', 'use_case': 'narrative_story'}
+8N2ng9i2uiUWqstgmWlH - {'accent': 'british', 'descriptive': 'gentle', 'age': 'middle_aged', 'gender': 'female', 'language': 'en', 'use_case': 'narrative_story'}
+
+
+
 # Twilio Serverless Package for SFDC Data Integration
 
 This serverless package provides six (6) serverless functions for interacting with a Salesforce environment.  These functions leverage Salesforce [JSForce](https://www.npmjs.com/package/jsforce) npm package. 

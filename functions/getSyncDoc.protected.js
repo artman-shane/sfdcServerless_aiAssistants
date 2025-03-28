@@ -1,10 +1,11 @@
 const {
   getSyncData,
   deleteSyncData,
-} = require("../assets/sfdc-functions.private.js");
+} = require(Runtime.getAssets()["/sfdc-functions.js"].path);
 
 exports.handler = async function (context, event, callback) {
   console.log("Get Sync Doc");
+  console.log("event: ", event);
   console.log(event.syncDocId);
   const document = await getSyncData(context, event);
   console.log("Document: ", document);

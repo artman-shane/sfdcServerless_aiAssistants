@@ -1,10 +1,10 @@
-const { verifyRequest } = require("../assets/utils.private.js");
+const { verifyRequest } = require(Runtime.getAssets()["/utils.js"].path);
 const {
   lookupContact,
   getOpenCases,
   connectToSfdc,
   pushSyncData,
-} = require("../assets/sfdc-functions.private.js");
+} = require(Runtime.getAssets()["/sfdc-functions.js"].path);
 
 exports.handler = async function (context, event, callback) {
   console.log("AI Assistant requested Contact Lookup");

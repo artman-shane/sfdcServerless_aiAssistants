@@ -110,7 +110,7 @@ async function getCaseDetails(caseId, conn) {
   try {
     // Query for case history
     const caseHistoryQuery = `
-      SELECT Id, CaseId, Field, OldValue, NewValue, CreatedBy.Name, CreatedDate 
+      SELECT Id, CaseId, NewValue, CreatedBy.Name, CreatedDate 
       FROM CaseHistory
       WHERE CaseId = '${caseId}'
     `;
@@ -293,25 +293,23 @@ async function deleteSyncData(context, documentId) {
  *
  * @param {jsforce.Connection} conn
  * @param {string} caseId
+ * @param {string} commentType (CaseComment, CaseHistory, etc.)
  * @param {string} comment
  */
-async function createCaseComment(conn, caseId, comment) {
+async function createCaseComment(conn, caseId, commentType, comment) {
   console.log("Create a case comment");
-  conn.sobject("CaseComment").create(
-    {
+
+  try {
+    const caseCreation = await conn.sobject(commentType).create({
       ParentId: caseId,
       CommentBody: comment,
       IsPublished: "true",
-    },
-    (err, resp) => {
-      if (err || !resp.success) {
-        console.log(err);
-        return "There was an error:", err;
-      }
-      // console.log("Case Comment created: ", resp);
-      return resp;
-    }
-  );
+    });
+    return caseCreation;
+  } catch (e) {
+    console.log("Error creating case: ", e);
+    return e;
+  }
 }
 
 module.exports = {

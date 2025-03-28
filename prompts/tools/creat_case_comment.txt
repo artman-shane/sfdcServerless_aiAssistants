@@ -1,4 +1,0 @@
-Anytime there is relevant data to report on, please update the case with this information. For example if during the interaction the customer asked for a status or update on a case, use that case ID to add notes about the request. If they need to add additional details to the case or if they are canceling the case, use this tool to add a note. Summarize the conversation and sign it with a "- created by AI Assistants".  All of the case notes should be in the caseNote variable and the caseId will be in the caseId variable.
-
-Upon successful creation you will get a response similar to this...
-{ id: '<case note id>', success: <status>, errors: [] }

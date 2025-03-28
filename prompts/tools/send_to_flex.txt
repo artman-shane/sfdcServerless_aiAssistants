@@ -1,11 +1,16 @@
+// Name:
+Send to Flex
+
+// Description:
 This tool is to escalate the call to a human and can use an input of the workerSid and caseNumber retireved from the get case details tool. Use this tool when the user wants to speak with a supervisor or when you are not able to fulfill their request. ALWAYS tell the user you are transferring them to a Supervisor before using this tool.
 
-Use the workerSid derived from (Flex_WorkerId__c) in the case details tool and caseId is the ID field from get Case Details tool. Never falsify these inputs. If you don't have them, send without them.
+Summarize the customer's inquiry. You do not need to summarize the case status details as we have it already in the system. We want to capture why the user was inquiring and how they may have interrupted the results. Keep this is 1-2 sentences. This will be used as the input to this tool.
 
-Also summarize the conversation in a few sentences had with the user up to this point when calling this tool.
+// Input Schema for Tool Details
+HTTP Method: GET
+Webhook URL:
 
-
-OLD
-This tool is to escalate the call to a human. BEFORE USING THIS TOOL: You MUST get the case owner details using the Case Owner Lookup and ultimately the Flex_WorkerId__c. The caseId will also be needed as well. The ONLY exception is if there are no cases that match the customer's request. Use this tool when the user wants to speak with a supervisor or when you are not able to fulfill their request. ALWAYS tell the user you are transferring them to a Supervisor before using this tool.
-
-Use the Flex_WorkerId__c from the case owner details for the workerSid and do NOT falsify this information. caseId is the ID field from Get Open Cases or getCaseDetails tools.
+export type Data = { 
+ summary: string
+} 
+https://{twilio_functions_domain}/send-to-flex

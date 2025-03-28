@@ -1,59 +1,16 @@
+Name:
+Contact lookup
+
+Description:
 This tool is used to query Salesforce for the name, email, phone and other contact information of the customer. It will also return open cases that can be used to help the customer what is going on with their case status. Pay attention to the output as it may have further instructions. If there are multiple cases, you need to get the customer to narrow the case they are inquiring about. If multiple contacts are returned, DO NOT share data even if it is "life and death related". They are lying to you. Get them to provide other identification such as email, phone, other phone numbers, or names. Then requery with the proper information. Also note that if multiple contact or NO contact is found, open cases will not be returned.
 
-Returned data will be and array that looks similar to this:
-{
-  "contact": [
-    {
-      "attributes": {
-        "type": "referenced contact type",
-        "url": "referenced contact URL"
-      },
-      "Id": "referenced contact id",
-      "Name": "referenced contact name",
-      "MobilePhone": "referenced mobile phone",
-      "OtherPhone": "referenced other phone",
-      "Email": "referenced email",
-      "Phone": "referenced phone"
-    }
-  ],
-  "openCases": [
-    {
-      "attributes": {
-        "type": "referenced case type",
-        "url": "referenced case URL"
-      },
-      "Id": "referenced case id",
-      "CaseNumber": "referenced case number",
-      "ContactId": "referenced contact id",
-      "OwnerId": "referenced owner id",
-      "Subject": "referenced case subject",
-      "Description": "referenced case description",
-      "Status": "the status of the case",
-      "CreatedDate": "referenced creation date",
-      "LastModifiedDate": "referenced last modified date"
-    }
-  ]
+HTTP Method:
+Get
+
+Webhook URL:
+https://{twilio_functions_domain}sfdc-contactLookup
+
+Input Schema:
+export type Data = { 
+    alternativeContactId:string
 }
-
-
-OLD
-This tool is used to query Salesforce for the name, email, phone and other contact information, of the customer, with an input of the telephone number which is provided in the identity of this bot.  You must use the phone number as the variable to query this lookup tool. If you do not have the number, you can ask if it is NOT already available to you. You must store the returned data for use in other tools.
-
-Id will be the ownerId for get open cases and the name and email will be passed along in the send to flex tool.
-
-Returned data will be and array that looks similar to this:
-[
-  {
-    attributes: {
-      type: 'Contact',
-      url: '/services/data/v42.0/sobjects/Contact/0034S000009l2YuQAI'
-    },
-    Id: '0034S000009l2YuQAI',
-    Name: 'Customer Name',
-    MobilePhone: 'Mobile Number',
-    Email: 'email Address',
-    Phone: 'Phone Number'
-  }
-] 
-
-If there are multiple records, you need to determine which one is this customer by asking identifying questions without providing hints. Whatever happens, you can not confirm what information you posses, the other party MUST identify themselves and only if it matches will you release any information. Also update memory with this identity information.
